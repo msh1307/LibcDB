@@ -79,6 +79,8 @@ void read_symbols(Elf *elf, Elf_Scn *symtab, const char * elf_out_path) {
 
     for (size_t i = 0; i < num_symbols; ++i) {
         const char *symbol_name = elf_strptr(elf, shdr.sh_link, symbols[i].st_name);
+        if ((unsigned long long)symbols[i].st_value == 0ULL)
+            continue;
         fprintf(f, "%s|0x%llx\n",
             symbol_name ? symbol_name : "<no-name>",
             (unsigned long long)symbols[i].st_value);
