@@ -89,7 +89,7 @@ const initializeDatabase = () => {
 		}
 	});
 	let libcs = get_libc();
-	const outdir = './Libc_syms/'
+	const outdir = __dirname+'/Libc_syms/'
 	console.log('libcs in FS:',libcs);
 	for(var i=0;i<libcs.length; i++){
 		let path = libcs[i];
@@ -140,9 +140,11 @@ const get_sym_obj = (filename) => {
 
 const search_one = (tar_sym,tar_off,sym_obj) => {
     if (sym_obj[tar_sym] === undefined)
-        return false; 
-    if (sym_obj[tar_sym] == tar_off)
-        return true;
+        return 0;
+    if ((sym_obj[tar_sym]&0xfff) == (tar_off &0xfff))
+        return 1;
+	else 
+		return 0;
 };
 
 const search = (query) => {
@@ -157,12 +159,11 @@ const search = (query) => {
 			}
 			for (var i=0; i< res.length; i++){
 				let sympath = res[i].sympath;
-				let flag = true;
 				let sym_obj = get_sym_obj(sympath);
-				for(var j=0; j<keys.length; j++){
-					flag &= search_one(keys[j], query[keys[j]], sym_obj);
-				}
-				if (flag)
+				let flag = 1;
+				for(var j=0; j<keys.length; j++)
+					flag &= (search_one(keys[j], query[keys[j]], sym_obj));
+				if (flag == 1)
 					ret.push(res[i]);
 			}
 			resolve(ret);
@@ -170,14 +171,6 @@ const search = (query) => {
 	});
 		
 };
-
-search({'printf':395120})
-	.then(res => {
-		console.log(res);
-	})
-	.catch(error => {
-		console.log(error);
-	});
 
 
 
@@ -204,20 +197,42 @@ app.use(express.json());
 app.post('/api/get', (req, res) => {
 	let rv = req.body;
 	if (typeof(rv) !='object'){
-		res.json({ status: 'error', message: 'Invalid JSON data.'});
+		res.json({ status: 'error', text: 'Invalid JSON data.'});
 		return ;
 	}
-	console.log(rv);
 	let keys = Object.keys(rv);
 	for(var i=0; i< keys.length; i++){
 		if(is_invalid(rv[keys[i]])){
-			res.json({ status: 'error', message: 'Invalid Hex string.', text: 'Invalid Hex String.'});
+			res.json({ status: 'error', text: 'Invalid Hex String.'});
 			return ;
 		}
-		rv[keys[i]] = parseInt(rv[keys[i]].toLowerCase(),16);
+		if (keys[i] !== '')
+			rv[keys[i]] = parseInt(rv[keys[i]].toLowerCase(),16);
+		else{
+			delete rv[keys[i]];
+		}
 	}
-	let txt = 'hi';
-	res.json({ status: 'success', message: 'Received JSON data successfully.',text: txt});
+	console.log(rv);
+
+	search(rv)
+		.then(result => {
+			console.log(result);
+			if (result.length == 0){
+				txt = 'Not Found';
+				res.json({ status: 'success', text: txt});
+				return ;
+			}
+			txt = '';
+			for(var i=0;i<result.length; i++){
+				txt += 'filename: '+result[i].path.split('/').pop() + '<br>';	
+				txt += 'md5sum: '+result[i].md5sum + '<br>';	
+				txt += '<br>'
+			}
+			res.json({ status: 'success', text: txt});
+		})
+		.catch(error => {
+			res.json({ status: 'success', text: 'Error Occured'});
+		});
 });
 
 app.listen(port,'0.0.0.0', () => {
