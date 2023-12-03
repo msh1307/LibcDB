@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="author" content="colorlib.com">
+    <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet" />
+    <link href="/css/main.css" rel="stylesheet" />
+	  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  	<script src='/js/auto.js'></script>
+  	<script src='/js/update.js'></script>
+  	<script src='/js/sub.js'></script>
+  </head>
+  <body>
+    <div class="s01">
+      <form>
+        <fieldset>
+          <legend>Libc Database</legend>
+        </fieldset>
+        <div class="inner-form">
+            <div class="input-field first-wrap">
+              <input id="sym0" class='symbol' type="text" placeholder="Symbol" />
+            </div>
+            <div class="input-field second-wrap">
+              <input id="addr0" class='address' type="text" placeholder="Addr&0xfff (Hex)" />
+            </div>
+        </div>
+        <button class="btn-search" type="button">Search</button>
+      </form>
+      <div class="out">
+        <h1 id="res">res</h1>
+        <p id="inner">
+
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
