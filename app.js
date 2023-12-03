@@ -95,7 +95,6 @@ const initializeDatabase = () => {
 		let path = libcs[i];
 		md5sum(path)
 			.then((md5sum) => {
-				console.log('MD5 sum:', md5sum);
 				let q = `SELECT * FROM libc WHERE md5sum = '${md5sum}'`;
 				connection.query(q, (err,res) => {
 					if (err){
@@ -124,7 +123,8 @@ const initializeDatabase = () => {
 			});
 	}
 };
-const get_syms = (filename) => {
+
+const get_sym_obj = (filename) => {
     const f = fs.readFileSync(filename, {encoding:'utf8', flag:'r'});
     const lines = f.split('\x0a');
     lines.pop();
@@ -136,8 +136,49 @@ const get_syms = (filename) => {
     }
     return out;
 };
+// console.log(get_syms('./Libc_syms/ubuntu2204_libc.so.6'));
 
-console.log(get_syms('./Libc_syms/ubuntu2204_libc.so.6'));
+const search_one = (tar_sym,tar_off,sym_obj) => {
+    if (sym_obj[tar_sym] === undefined)
+        return false; 
+    if (sym_obj[tar_sym] == tar_off)
+        return true;
+};
+
+const search = (query) => {
+	return new Promise((resolve, reject) => {
+		const q = 'SELECT * FROM libc';
+		const keys = Object.keys(query);
+		let ret = [];
+		connection.query(q, (err,res) => {
+			if (err){
+				console.log('err: ',err);
+				return ;
+			}
+			for (var i=0; i< res.length; i++){
+				let sympath = res[i].sympath;
+				let flag = true;
+				let sym_obj = get_sym_obj(sympath);
+				for(var j=0; j<keys.length; j++){
+					flag &= search_one(keys[j], query[keys[j]], sym_obj);
+				}
+				if (flag)
+					ret.push(res[i]);
+			}
+			resolve(ret);
+		});
+	});
+		
+};
+
+search({'printf':395120})
+	.then(res => {
+		console.log(res);
+	})
+	.catch(error => {
+		console.log(error);
+	});
+
 
 
 app.use('/css',express.static(__dirname+'/static/css'));
