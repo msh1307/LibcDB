@@ -61,7 +61,8 @@ const initializeDatabase = () => {
     CREATE TABLE IF NOT EXISTS libc (
       id INT AUTO_INCREMENT PRIMARY KEY,
       path VARCHAR(255) NOT NULL,
-      md5sum VARCHAR(255) NOT NULL
+      md5sum VARCHAR(255) NOT NULL,
+	  sympath VARCHAR(255) NOT NULL
     )
 	`;
 	connection.query(createTableQuery, (err, res) => {
@@ -112,7 +113,6 @@ const initializeDatabase = () => {
 	}
 	
 };
-
 
 app.use('/css',express.static(__dirname+'/static/css'));
 app.use('/images',express.static(__dirname+'/static/images'));
