@@ -44,8 +44,6 @@ const update = (br) => {
         autocomp(`#sym${l}`);
     }
 };
-
-
 $(() => { // after load
     $('.address').on('input', () => {
         update(1);

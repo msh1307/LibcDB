@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -253,7 +254,7 @@ const process = async (res, result) => {
 	txt = '';
 	for(var i=0;i<result.length; i++){
 		try { 
-			let offset = await get_bin_sh('./Libc/ubuntu2204_libc.so.6');
+			let offset = await get_bin_sh(result[i].path);
 			const filename = result[i].path.split('/').pop();
 			const symfilename = result[i].sympath.split('/').pop();
 			txt += `filename: <a href='/files/${filename}'>`+filename+ '</a><br>';	
