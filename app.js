@@ -1,4 +1,6 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
 const app = express();
 const port = 13070;
 const fs = require('fs');
@@ -136,7 +138,6 @@ const get_sym_obj = (filename) => {
     }
     return out;
 };
-// console.log(get_syms('./Libc_syms/ubuntu2204_libc.so.6'));
 
 const search_one = (tar_sym,tar_off,sym_obj) => {
     if (sym_obj[tar_sym] === undefined)
@@ -195,6 +196,27 @@ const get_bin_sh = (filepath) => {
     });
 };
 
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'Libc/');
+    },
+    filename: (req, file, cb) => {
+        const fileName = file.originalname.toLowerCase().split(' ').join('-');
+        cb(null, fileName);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+    	cb(null, true);
+    }
+});
+const uploadDir = path.join(__dirname, '/Libc');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
 
 app.use('/files',express.static(__dirname+'/Libc'));
 app.use('/syms',express.static(__dirname+'/Libc_syms'));
@@ -276,6 +298,14 @@ app.post('/api/get', (req, res) => {
 			console.log(error);
 			res.json({ status: 'success', text: 'Error Occured'});
 		});
+});
+
+app.get('/upload', (req, res) => {
+    res.sendFile(path.join(__dirname, './upload.html'));
+});
+
+app.post('/api/upload', upload.single('file'), (req, res) => {
+    res.json({ status: 'success', message: 'File uploaded successfully.' });
 });
 
 app.listen(port,'0.0.0.0', () => {
