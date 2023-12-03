@@ -196,6 +196,8 @@ const get_bin_sh = (filepath) => {
 };
 
 
+app.use('/files',express.static(__dirname+'/Libc'));
+app.use('/syms',express.static(__dirname+'/Libc_syms'));
 app.use('/css',express.static(__dirname+'/static/css'));
 app.use('/images',express.static(__dirname+'/static/images'));
 app.use('/js',express.static(__dirname+'/static/js'));
@@ -230,13 +232,14 @@ const process = async (res, result) => {
 	for(var i=0;i<result.length; i++){
 		try { 
 			let offset = await get_bin_sh('./Libc/ubuntu2204_libc.so.6');
-			console.log(offset);
-			txt += 'filename: '+result[i].path.split('/').pop() + '<br>';	
+			const filename = result[i].path.split('/').pop();
+			const symfilename = result[i].sympath.split('/').pop();
+			txt += `filename: <a href='/files/${filename}'>`+filename+ '</a><br>';	
 			txt += 'md5sum: '+result[i].md5sum + '<br>';	
 			txt += 'system: '+ '0x'+get_sym_obj(result[i].sympath)['system'].toString(16) + '<br>';
 			txt += '/bin/sh: '+ '0x'+offset.toString(16) + '<br>';
+			txt += `<a href='/syms/${symfilename}'>syms</a>`
 			txt += '<br>';
-			console.log(txt);
 		} catch (err) {
 			console.log(err);
 			return res.json({ status: 'error', text: 'Failed to get offset.'});
