@@ -301,13 +301,13 @@ app.post('/api/get', (req, res) => {
 		});
 });
 
-app.get('/upload', (req, res) => {
-    res.sendFile(path.join(__dirname, './upload.html'));
-});
+// app.get('/upload', (req, res) => {
+//     res.sendFile(path.join(__dirname, './upload.html'));
+// });
 
-app.post('/api/upload', upload.single('file'), (req, res) => {
-    res.json({ status: 'success', message: 'File uploaded successfully.' });
-});
+// app.post('/api/upload', upload.single('file'), (req, res) => {
+//     res.json({ status: 'success', message: 'File uploaded successfully.' });
+// });
 
 app.listen(port,'0.0.0.0', () => {
 	console.log(`Server listening at http://localhost:${port}`);
