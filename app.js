@@ -172,6 +172,28 @@ const search = (query) => {
 		
 };
 
+const get_bin_sh = (filepath) => {
+    return new Promise((resolve, reject) => {
+        const proc = spawn('/usr/bin/strings', ['-tx',filepath]);
+        let offset = 0;
+        proc.stdout.on('data', (data)=> {
+            const res = (data.toString('utf-8'));
+            const idx = res.indexOf('/bin/sh');
+            if (idx !== -1){
+                offset = (parseInt(res.slice(idx-0x10,idx-1).split('\x20').pop(),16));
+            }
+        });
+        proc.on('close', () => {
+            if (offset !== 0)
+                resolve(offset);
+            else   
+                resolve(-1);
+        });
+        proc.on('error', (error) => {
+            reject(error);
+        });
+    });
+};
 
 
 app.use('/css',express.static(__dirname+'/static/css'));
@@ -194,6 +216,35 @@ const is_invalid = (tar) =>{
 };
 
 app.use(express.json());
+
+const process = async (res, result) => {
+	console.log(result);
+	console.log('well processed');
+	let txt = ''
+	if (result.length == 0){
+		txt = 'Not Found';
+		res.json({ status: 'success', text: txt});
+		return ;
+	}
+	txt = '';
+	for(var i=0;i<result.length; i++){
+		try { 
+			let offset = await get_bin_sh('./Libc/ubuntu2204_libc.so.6');
+			console.log(offset);
+			txt += 'filename: '+result[i].path.split('/').pop() + '<br>';	
+			txt += 'md5sum: '+result[i].md5sum + '<br>';	
+			txt += 'system: '+ '0x'+get_sym_obj(result[i].sympath)['system'].toString(16) + '<br>';
+			txt += '/bin/sh: '+ '0x'+offset.toString(16) + '<br>';
+			txt += '<br>';
+			console.log(txt);
+		} catch (err) {
+			console.log(err);
+			return res.json({ status: 'error', text: 'Failed to get offset.'});
+		}
+	}
+	res.json({ status: 'success', text: txt});
+}
+
 app.post('/api/get', (req, res) => {
 	let rv = req.body;
 	if (typeof(rv) !='object'){
@@ -216,21 +267,10 @@ app.post('/api/get', (req, res) => {
 
 	search(rv)
 		.then(result => {
-			console.log(result);
-			if (result.length == 0){
-				txt = 'Not Found';
-				res.json({ status: 'success', text: txt});
-				return ;
-			}
-			txt = '';
-			for(var i=0;i<result.length; i++){
-				txt += 'filename: '+result[i].path.split('/').pop() + '<br>';	
-				txt += 'md5sum: '+result[i].md5sum + '<br>';	
-				txt += '<br>'
-			}
-			res.json({ status: 'success', text: txt});
+			process(res, result);
 		})
 		.catch(error => {
+			console.log(error);
 			res.json({ status: 'success', text: 'Error Occured'});
 		});
 });
