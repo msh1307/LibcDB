@@ -124,7 +124,20 @@ const initializeDatabase = () => {
 			});
 	}
 };
+const get_syms = (filename) => {
+    const f = fs.readFileSync(filename, {encoding:'utf8', flag:'r'});
+    const lines = f.split('\x0a');
+    lines.pop();
+    let out = {};
+    let tok;
+    for(var i=0; i<lines.length; i++){
+        tok = lines[i].split('|');
+        out[tok[0]] = parseInt(tok[1],16);
+    }
+    return out;
+};
 
+console.log(get_syms('./Libc_syms/ubuntu2204_libc.so.6'));
 
 
 app.use('/css',express.static(__dirname+'/static/css'));
