@@ -3,6 +3,7 @@ const app = express();
 const port = 13070;
 const fs = require('fs');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
 
 function assert(condition, message) {
     if (!condition) {
@@ -54,7 +55,16 @@ const md5sum = (filePath) => {
 	  	});
 	});
 };
-  
+
+const save_syms = (elfpath, outdir) => {
+	const outpath = outdir+elfpath.split('/').pop();
+	const elfProcess = spawn('./sym_reader/sym_reader', [elfpath,outpath]);
+	elfProcess.on('close', (code) => {
+		console.log(`child process exited with code ${code}`);
+		assert (code === 0, 'sym_reader execution failure');
+	});
+	return outpath;
+};
 
 const initializeDatabase = () => {
 	const createTableQuery = `
@@ -79,6 +89,7 @@ const initializeDatabase = () => {
 		}
 	});
 	let libcs = get_libc();
+	const outdir = './Libc_syms/'
 	console.log('libcs in FS:',libcs);
 	for(var i=0;i<libcs.length; i++){
 		let path = libcs[i];
@@ -95,8 +106,9 @@ const initializeDatabase = () => {
 					if (res.length == 0){
 						console.log('it\'s empty now');
 						console.log(path);
-						q = `INSERT INTO libc (path, md5sum) 
-						VALUES ('${path}', '${md5sum}')`;
+						const outpath = save_syms(path,outdir);
+						q = `INSERT INTO libc (path, md5sum, sympath) 
+						VALUES ('${path}', '${md5sum}', '${outpath}')`;
 						connection.query(q, (err,res) => {
 							if (err){
 								console.log('err: ',err);
@@ -111,8 +123,9 @@ const initializeDatabase = () => {
 				console.error('Error calculating MD5:', error);
 			});
 	}
-	
 };
+
+
 
 app.use('/css',express.static(__dirname+'/static/css'));
 app.use('/images',express.static(__dirname+'/static/images'));
