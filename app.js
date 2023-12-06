@@ -299,6 +299,7 @@ app.post('/api/get', (req, res) => {
 			console.log(error);
 			res.json({ status: 'success', text: 'Error Occured'});
 		});
+	
 });
 
 // app.get('/upload', (req, res) => {
